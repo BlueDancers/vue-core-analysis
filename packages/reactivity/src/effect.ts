@@ -19,6 +19,9 @@ type KeyToDepMap = Map<any, Dep>
 const targetMap = new WeakMap<any, KeyToDepMap>()
 
 // The number of effects currently being tracked recursively.
+/**
+ * 当前递归跟踪的效果个数
+ */
 let effectTrackDepth = 0
 
 export let trackOpBit = 1
@@ -27,6 +30,11 @@ export let trackOpBit = 1
  * The bitwise track markers support at most 30 levels of recursion.
  * This value is chosen to enable modern JS engines to use a SMI on all platforms.
  * When recursion depth is greater, fall back to using a full cleanup.
+ */
+/**。
+ *按位轨迹标记最多支持30级递归。
+ *选择此值是为了使现代JS引擎能够在所有平台上使用SMI。
+ *当递归深度较大时，回退到使用完全清除。
  */
 const maxMarkerBits = 30
 
@@ -211,6 +219,8 @@ export function resetTracking() {
 }
 
 export function track(target: object, type: TrackOpTypes, key: unknown) {
+  console.log('当前activeEffect', activeEffect)
+
   if (shouldTrack && activeEffect) {
     let depsMap = targetMap.get(target)
     if (!depsMap) {
@@ -226,6 +236,7 @@ export function track(target: object, type: TrackOpTypes, key: unknown) {
       : undefined
 
     trackEffects(dep, eventInfo)
+    console.log('依赖收集完毕', targetMap)
   }
 }
 

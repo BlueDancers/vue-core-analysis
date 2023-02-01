@@ -56,6 +56,8 @@ function createArrayInstrumentations() {
   const instrumentations: Record<string, Function> = {}
   // instrument identity-sensitive Array methods to account for possible reactive
   // values
+  //检测标识敏感的数组方法以考虑可能的反应。
+  //取值
   ;(['includes', 'indexOf', 'lastIndexOf'] as const).forEach(key => {
     instrumentations[key] = function (this: unknown[], ...args: unknown[]) {
       const arr = toRaw(this) as any
@@ -63,9 +65,11 @@ function createArrayInstrumentations() {
         track(arr, TrackOpTypes.GET, i + '')
       }
       // we run the method using the original args first (which may be reactive)
+      // 我们首先使用原始参数运行该方法(这可能是被动的)
       const res = arr[key](...args)
       if (res === -1 || res === false) {
         // if that didn't work, run it again using raw values.
+        // 如果不起作用，请使用原始值再次运行它。
         return arr[key](...args.map(toRaw))
       } else {
         return res
@@ -170,17 +174,25 @@ function createSetter(shallow = false) {
     } else {
       // in shallow mode, objects are set as-is regardless of reactive or not
     }
-
+    // 当前target是数组,并且本次修改的的是执行下标
+    // 如果是 这判断是否是现有下标,是 true 否 false
+    // 如果不是 这判断是否为自身属性 是 true 否 false
     const hadKey =
-      isArray(target) && isIntegerKey(key)
+      isArray(target) && isIntegerKey(key) // isIntegerKey 判断是不是数值型字符串
         ? Number(key) < target.length
         : hasOwn(target, key)
+
     const result = Reflect.set(target, key, value, receiver)
     // don't trigger if target is something up in the prototype chain of original
     if (target === toRaw(receiver)) {
+      console.log(target, toRaw(receiver))
+      console.log(hadKey)
+
       if (!hadKey) {
+        // 如果是 增加值 则是add trigger
         trigger(target, TriggerOpTypes.ADD, key, value)
       } else if (hasChanged(value, oldValue)) {
+        // 如果是修改至 则走set trigger
         trigger(target, TriggerOpTypes.SET, key, value, oldValue)
       }
     }
